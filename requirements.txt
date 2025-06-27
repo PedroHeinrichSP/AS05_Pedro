@@ -1,0 +1,8 @@
+gradio
+PyPDF2
+python-dotenv
+google-generativeai
+pinecone==2.2.4
+langchain
+langchain-community
+sentence-transformers
