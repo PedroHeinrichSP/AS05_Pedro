@@ -1,8 +1,9 @@
-gradio
-PyPDF2
-python-dotenv
-google-generativeai
-pinecone==2.2.4
-langchain
-langchain-community
-sentence-transformers
+gradio==3.44.0
+PyPDF2==3.0.1
+python-dotenv==1.0.0
+google-generative-ai==0.7.0
+pinecone-client==2.2.2
+langchain==0.0.232
+langchain-pinecone==0.0.39
+langchain-huggingface==0.0.26
+sentence-transformers==2.2.2

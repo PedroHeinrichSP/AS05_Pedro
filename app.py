@@ -3,8 +3,7 @@ import gradio as gr
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 import google.generativeai as genai
-from pinecone import Pinecone
-from pinecone import ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec
 from sentence_transformers import SentenceTransformer
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore
@@ -28,7 +27,7 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 if PINECONE_INDEX_NAME not in [i.name for i in pc.list_indexes()]:
     pc.create_index(
         name=PINECONE_INDEX_NAME,
-        dimension=1024,
+        dimension=768,
         metric="cosine",
         spec=ServerlessSpec(cloud=PINECONE_CLOUD, region=PINECONE_REGION)
     )
@@ -41,37 +40,42 @@ embedding_model = HuggingFaceEmbeddings(
 )
 
 vectorstore = PineconeVectorStore(
-    pinecone_index=index,
+    index=index,
     embedding=embedding_model,
     text_key="text",
 )
 
+
 retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
-# 📥 Função para carregar e indexar PDFs
-def indexar_pdfs(pasta="data"):
-    print("🔄 Indexando PDFs...")
-    model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-    doc_id = 0
+# 📥 Indexar PDFs com botão
+def indexar_pdfs_interface(pasta="data"):
+    try:
+        model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
+        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+        doc_id = 0
+        arquivos_indexados = 0
 
-    for nome_arquivo in os.listdir(pasta):
-        if not nome_arquivo.endswith(".pdf"):
-            continue
-        pdf = PdfReader(os.path.join(pasta, nome_arquivo))
-        texto = "\n".join([p.extract_text() or "" for p in pdf.pages])
-        partes = splitter.split_text(texto)
-        embeddings = model.encode(partes)
+        for nome_arquivo in os.listdir(pasta):
+            if not nome_arquivo.endswith(".pdf"):
+                continue
+            pdf = PdfReader(os.path.join(pasta, nome_arquivo))
+            texto = "\n".join([p.extract_text() or "" for p in pdf.pages])
+            partes = splitter.split_text(texto)
+            embeddings = model.encode(partes)
 
-        for i, emb in enumerate(embeddings):
-            index.upsert(vectors=[{
-                "id": f"{nome_arquivo}-{doc_id}",
-                "values": emb.tolist(),
-                "metadata": {"text": partes[i]}
-            }])
-            doc_id += 1
+            for i, emb in enumerate(embeddings):
+                index.upsert(vectors=[{
+                    "id": f"{nome_arquivo}-{doc_id}",
+                    "values": emb.tolist(),
+                    "metadata": {"text": partes[i]}
+                }])
+                doc_id += 1
+            arquivos_indexados += 1
 
-    print("✅ Indexação concluída.")
+        return f"✅ {arquivos_indexados} PDFs indexados com sucesso."
+    except Exception as e:
+        return f"❌ Erro ao indexar: {e}"
 
 # 💬 Função de resposta
 def responder(pergunta):
@@ -85,20 +89,27 @@ CONTEXTO:
 PERGUNTA: {pergunta}
 RESPOSTA:"""
 
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemma-3-1b-it")
     resposta = model.generate_content(prompt)
     return resposta.text
 
 # 🖼️ Interface
-iface = gr.Interface(
-    fn=responder,
-    inputs=gr.Textbox(label="Pergunta"),
-    outputs=gr.Textbox(label="Resposta"),
-    title="🤖 Assistente de PDFs com Gemini",
-    description="Faça perguntas sobre os documentos PDF indexados."
-)
+with gr.Blocks() as iface:
+    gr.Markdown("## 🤖 Assistente de PDFs com Gemini")
+    gr.Markdown("Faça perguntas com base nos PDFs que você indexar.")
 
+    with gr.Row():
+        entrada = gr.Textbox(label="Pergunta")
+        saida = gr.Textbox(label="Resposta")
+
+    btn_perguntar = gr.Button("Responder")
+    btn_perguntar.click(fn=responder, inputs=entrada, outputs=saida)
+
+    gr.Markdown("---")
+    btn_indexar = gr.Button("📥 Indexar PDFs da pasta /data")
+    log_indexacao = gr.Textbox(label="Log de Indexação")
+    btn_indexar.click(fn=indexar_pdfs_interface, inputs=[], outputs=log_indexacao)
+
+# 🚀 Lançar app
 if __name__ == "__main__":
-    # Descomente para indexar seus PDFs:
-    # indexar_pdfs()
     iface.launch()
