@@ -201,3 +201,5 @@ cython_debug/
 /pyvenv.cfg
 /share
 /share/man/man1
+
+chaves.env
