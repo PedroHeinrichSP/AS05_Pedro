@@ -16,11 +16,20 @@ Assistente conversacional baseado em LLM (Gemini), que indexa documentos PDF em 
 ## Instalação
 
 ```bash
+# Baixar do Github
 git clone https://github.com/PedroHeinrichSP/AS05_Pedro
 cd AS05_Pedro
-python3 -m venv venv
-source venv/bin/activate
+
+# Criação de ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
+
+#Dependências
 pip install -r requirements.txt
+
+#Executar a aplicação
+python app.py
 ```
 
 ## Configuração
@@ -35,17 +44,9 @@ PINECONE_CLOUD=...
 
 Então coloque os PDFs na pasta data/
 
-## Instalar dependências e executar os arquivos
+## Executar os arquivos
 
 ```bash
-#Criação de ambiente virtual
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
-
-#Dependências
-pip install -r requirements.txt
-
 #Executar a aplicação
 python app.py
 ```
@@ -53,5 +54,8 @@ python app.py
 A interface web abrirá no endereço: http://127.0.0.1:7860
 
 ## Como usar
-Após os PDFs estarem na página clique em Indexar PDFs
-Digite suas perguntas na caixa de texto e clique em responder
+
+- Após os PDFs estarem na página clique em Indexar PDFs
+- Digite suas perguntas na caixa de texto e clique em responder
+
+---
