@@ -55,7 +55,7 @@ A interface web abrirá no endereço: http://127.0.0.1:7860
 
 ## Como usar
 
-- Após os PDFs estarem na página clique em Indexar PDFs
+- Após os PDFs estarem na pasta clique em Indexar PDFs
 - Digite suas perguntas na caixa de texto e clique em responder
 
 ---
