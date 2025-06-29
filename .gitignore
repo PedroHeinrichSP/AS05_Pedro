@@ -200,3 +200,4 @@ cython_debug/
 /include
 /pyvenv.cfg
 /share
+/share/man/man1
